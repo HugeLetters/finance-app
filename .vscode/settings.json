@@ -18,9 +18,13 @@
 	"[jsonc]": {
 		"editor.defaultFormatter": "biomejs.biome"
 	},
+	"[css]": {
+		"editor.defaultFormatter": "biomejs.biome"
+	},
 	"editor.formatOnSave": true,
 	"editor.codeActionsOnSave": {
 		"source.organizeImports.biome": "always",
 		"source.fixAll.biome": "always"
-	}
+	},
+	"typescript.tsdk": "node_modules/typescript/lib"
 }

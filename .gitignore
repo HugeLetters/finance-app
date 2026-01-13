@@ -28,3 +28,6 @@ gitignore
 Thumbs.db
 
 /test-results
+
+# Reference libraries
+reference/library

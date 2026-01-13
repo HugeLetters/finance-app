@@ -9,11 +9,36 @@
 		"jsxImportSource": "solid-js",
 		"allowJs": true,
 		"noEmit": true,
+
 		"strict": true,
+		"noFallthroughCasesInSwitch": true,
+		"noUncheckedIndexedAccess": true,
+		"noImplicitOverride": true,
+
 		"types": ["vinxi/types/client"],
 		"isolatedModules": true,
+		"skipLibCheck": true,
 		"paths": {
 			"~/*": ["./src/*"]
-		}
-	}
+		},
+		"plugins": [
+			{
+				"name": "@effect/language-service",
+				"namespaceImportPackages": [
+					"effect",
+					"@effect/platform",
+					"@effect/platform-bun",
+					"@effect/platform-node"
+				],
+				"importAliases": {
+					"Array": "Arr",
+					"String": "Str",
+					"Function": "Fn",
+					"Number": "Num",
+					"BigInt": "BigInteger"
+				}
+			}
+		]
+	},
+	"include": ["src", "scripts", "tests"]
 }
