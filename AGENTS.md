@@ -49,3 +49,4 @@ Creating a family finance app to track spending, investments, and shared expense
 - Add keyboard navigation
 - Configure custom theming
 - Configure Playwright testing framework
+- setup tailwind
