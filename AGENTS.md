@@ -1,7 +1,7 @@
 # Finance App Project - Agent Reference
 
 ## Project Overview
-Creating a family finance app to track spending, investments, and shared expenses with live syncing and smooth user experience. The project is initialized with Solid Start, featuring a basic routing structure (index, about, 404 pages) and sample components (Nav, Counter), using Bun for runtime and package management.
+Creating a family finance app to track spending, investments, and shared expenses with live syncing and smooth user experience. The project is initialized with Solid Start, featuring a basic routing structure (index, about, 404 pages) and sample components (Nav, Counter), using Bun for runtime and package management. Playwright is set up for end-to-end testing with auto-starting dev server.
 
 ## Desired Features
 - **Spending Table**: Track purchases by date, spender, category, comment, is recurring, etc.
@@ -20,24 +20,32 @@ Creating a family finance app to track spending, investments, and shared expense
 - **Command Palette**: For quick actions
 
 ## Technology Stack
-- **Runtime**: Bun JS - https://bun.sh/docs (used for running the app and managing dependencies with bun add/install/run)
+- **Runtime**: Bun JS - https://bun.sh/docs (used for running the app, managing dependencies with bun add/install/run, and executing scripts)
 - **Effect System**: Effect - https://effect.website/
 - **Styling**: TailwindCSS - https://tailwindcss.com/
 - **UI Kit**: Kobalte - https://kobalte.dev/docs
 - **Frontend Framework**: SolidJS - https://docs.solidjs.com/quick-start
 - **Routing**: Solid Router - https://docs.solidjs.com/solid-router/getting-started/installation-and-setup
 - **Full-Stack Framework**: Solid Start - https://docs.solidjs.com/solid-start/getting-started (project initialized with default structure including src/routes/, entry files, and app.tsx)
-- **Linter/Formatter**: Biome - https://biomejs.dev/ (configured with recommended rules for code quality and consistency)
-- **Testing**: Playwright - https://playwright.dev/
+- **Linter/Formatter**: Biome - https://biomejs.dev/ (configured with recommended rules for code quality and consistency; note: some existing code may have lint warnings like non-null assertions and button types)
+- **Testing**: Playwright - https://playwright.dev/ (end-to-end testing with auto-starting dev server via playwright.config.ts)
 - **Live Sync Options** (need research):
   - Zero - https://zero.rocicorp.dev/docs/introduction
   - Jazz - https://jazz.tools/docs/react
   - Livestore - https://livestore.dev/
 
 ## Development Environment
-- **Code Quality**: Biome handles linting and formatting with recommended rules enabled. Run `bun run lint` to check for issues, `bun run lint:fix` to auto-apply fixes, and `bun run format` to format code.
+- **Code Quality**: Biome handles linting and formatting with recommended rules enabled. Run `bun run lint` to check for issues, `bun run lint:fix` to auto-apply fixes, and `bun run format` to format code. Always run linting after code changes to ensure consistency.
 - **VSCode Integration**: Project includes `.vscode/settings.json` configured for Biome (format on save, default formatter for JS/TS/JSON files, code actions for imports and fixes). The Biome extension is recommended in `.vscode/extensions.json`.
-- **Git**: Repository initialized for version control.
+- **Git**: Repository initialized for version control. Commit changes after verifying tests pass.
+- **Testing**: Playwright tests are in `tests/` directory. Scripts added: `bun run test` (headless), `bun run test:headed` (visible browser), `bun run test:ui` (interactive UI). Config in `playwright.config.ts` auto-starts dev server at http://localhost:3000. Run tests after starting dev server or use config for automatic server management.
+
+## Testing
+- **Framework**: Playwright for end-to-end testing.
+- **Configuration**: `playwright.config.ts` sets baseURL to http://localhost:3000 and webServer to auto-start `bun run dev`.
+- **Test Structure**: Tests in `tests/` directory (e.g., `basic.spec.ts` checks home page elements).
+- **Running Tests**: Use package scripts for different modes. Ensure dev server is running or let config handle it.
+- **Best Practices**: Write tests to reflect actual site features; use relative URLs with baseURL; include checks for key UI elements.
 
 ## Future Tasks
 - Research and choose live sync solution
@@ -48,5 +56,4 @@ Creating a family finance app to track spending, investments, and shared expense
 - Implement command palette
 - Add keyboard navigation
 - Configure custom theming
-- Configure Playwright testing framework
 - setup tailwind
