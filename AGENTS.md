@@ -27,7 +27,7 @@ Family finance app for tracking spending, investments, and shared expenses with 
 
 ## Technology Stack
 - **Runtime**: Bun JS - https://bun.sh/docs (run app, manage deps with bun add/install/run, scripts)
-- **Effect System**: Effect - https://effect.website/ ([API Reference](https://effect.website/docs/additional-resources/api-reference/)) (FP library for TS; wildcard imports like `import * as Effect from "effect/Effect"`; platform packages (@effect/platform, @effect/platform-bun, @effect/platform-node) for file system and process operations;)
+- **Effect System**: Effect - https://effect.website/ ([API Reference](https://effect.website/docs/additional-resources/api-reference/)) (FP library for TS; wildcard imports like `import * as Effect from "effect/Effect"`; platform packages (@effect/platform, @effect/platform-bun, @effect/platform-node) for file system and process operations; Differ API for change tracking)
 - **Schema Validation**: effect/schema - https://effect-ts.github.io/effect/docs/schema (type-safe validation; use `Schema.transformOrFail` for parsing; avoid throwing in decode)
 - **Typed Regex**: arkregex - https://www.npmjs.com/package/arkregex (compile-time typed regex with named captures)
 - **Styling**: TailwindCSS - https://tailwindcss.com/
@@ -37,7 +37,10 @@ Family finance app for tracking spending, investments, and shared expenses with 
 - **Full-Stack Framework**: Solid Start - https://docs.solidjs.com/solid-start/getting-started (initialized with src/routes/, entry files, app.tsx)
 - **Linter/Formatter**: Biome - https://biomejs.dev/ (recommended rules; lint warnings: non-null assertions, button types)
 - **Testing**: Playwright - https://playwright.dev/ (e2e with auto-start dev server via playwright.config.ts)
-- **Live Sync Options** (research needed): Zero (https://zero.rocicorp.dev/docs/introduction), Jazz (https://jazz.tools/docs/react), Livestore (https://livestore.dev/)
+- **Live Sync Options** (research needed): Zero (https://zero.rocicorp.dev/docs/introduction), Jazz (https://jazz.tools/docs/react), Livestore (https://livestore.dev/). Differ module provides foundational patch computation for efficient sync.
+
+## Core Modules
+- **Differ Module** (`src/utils/differ/index.ts`): Provides type-safe differencers for computing and applying patches to data structures (strings, objects, arrays, maps, sets). Uses Effect's Differ API with tagged unions for patches and Match for exhaustive pattern matching. Supports live sync by enabling efficient change tracking and application. Includes Formatter namespace for visualizing patches as tree structures for debugging.
 
 ## Development Environment
 - **Code Quality**: Biome handles linting and formatting with recommended rules enabled. Run `bun run lint` to check for issues, `bun run lint:fix` to auto-apply fixes, and `bun run format` to format code. Always run linting after code changes to ensure consistency.
@@ -58,13 +61,17 @@ Family finance app for tracking spending, investments, and shared expenses with 
 - **Platform Services**: Use services like FileSystem from @effect/platform for cross-platform operations; provide implementations via layers from platform-specific packages (e.g., `BunContext.layer` for Bun runtime to access FileSystem, Path, Command, etc.).
 - **Running Effects**: Use `Effect.runPromise` for async execution with provided layers; wrap synchronous operations in `Effect.sync`. For Bun scripts, use `BunRuntime.runMain` with layers like `BunContext.layer`.
 - **Command Execution**: To run shell commands with output logging, pipe the Command with `Command.stdout("inherit")` and `Command.stderr("inherit")`, then yield `Command.exitCode` to execute and check exit status.
+- **Differ API**: Use Effect's Differ for change tracking; implement diff, patch, combine, and empty methods. Use tagged unions (Data.TaggedClass) for patch types to ensure type safety.
+- **Pattern Matching**: Prefer `Match.value(...).pipe(Match.tagsExhaustive({...}))` over switch statements for exhaustive, type-safe pattern matching on tagged unions.
 
 ## Code Conventions
 - File naming: Use kebab-case for routes/components (e.g., `spending-table.tsx`), camelCase for utilities and plugins.
 - Imports: Group external libs first, then internal modules; sort alphabetically.
 - Commit messages: Start with verb (add, fix, refactor), summarize change, keep under 50 chars.
+- **Documentation**: Use JSDoc comments for modules, namespaces, and key functions to explain purpose and usage. Add module-level comments at the top of files describing overall functionality.
 - **Value Clamping and Scaling**: For derived calculations (e.g., color L/C), use `Math.max(0, Math.min(1, value))` to clamp to valid ranges, preventing out-of-bounds issues with edge-case inputs like very light/dark bases.
 - **Plugin Development**: Use Effect.gen for sequential operations in Vite plugins; provide necessary layers for platform services; run effects with Effect.runPromise.
+- **Refactoring**: When refactoring, prefer Effect's Match API over switch statements for better type safety and consistency. Ensure exhaustive matching with Match.tagsExhaustive.
 
 ## Color System
 - **Semantic Colors**: Restrict color tokens to fixed semantic names ("primary", "secondary", "accent", "neutral", "success", "warning", "error") using union types for compile-time safety. "Neutral" was recently added for gray tones with very low chroma (e.g., 0.01) to ensure true gray shades.
