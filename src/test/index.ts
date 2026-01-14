@@ -31,24 +31,43 @@ const unexpectedSuccess = Fn.flow(
 
 /**
  * Asserts that two values are equivalent using Effect's Equal typeclass.
- * Provides detailed diff output when values don't match.
+ * Works with Effect Data structures and primitives, but not plain JavaScript objects/arrays.
+ * For custom data structures, use Effect's Data module to create comparable types.
+ * When values appear structurally equal but fail equality, provides specific guidance via Effect.logWarning.
+ * Returns an Effect that should be yielded in test functions.
  *
  * @example
  * ```ts
- * test.effect("should equal", () =>
+ * import { Data } from "effect";
+ *
+ * class Person extends Data.Class<{ name: string; age: number }> {}
+ *
+ * test.effect("should equal Data structures", () =>
  *   Effect.gen(function* () {
  *     const result = yield* someEffect();
- *     expectEquivalence(result, { expected: "value" });
+ *     yield* expectEquivalence(result, new Person({ name: "Alice", age: 30 }));
  *   })
  * );
  * ```
  */
-export function expectEquivalence<T>(received: T, expected: T) {
+
+export const expectEquivalence = Effect.fn("expectEquivalence", {
+	captureStackTrace: true,
+})(function* <T>(received: T, expected: T) {
 	const patch = UnknownDiffer.differ.diff(expected, received);
 	const diff = UnknownDiffer.Formatter.format(patch);
 
+	const areEquivalent = Equal.equals(received, expected);
+	const isDiffEmpty = patch === UnknownDiffer.differ.empty;
+	if (!areEquivalent && isDiffEmpty) {
+		yield* Effect.logWarning(
+			"Values appear structurally equal but do not implement Effect's Equal interface.",
+			"Consider using Effect's Data module (e.g., Data.Class) for better type safety and performance.",
+		);
+	}
+
 	const message = `Expected ${Stdout.colored("red", received)} to equal ${Stdout.green(expected)}.\n${diff}`;
-	return expect(Equal.equals(received, expected), message).toBeTrue();
-}
+	expect(areEquivalent || isDiffEmpty, message).toBeTrue();
+});
 
 export { test } from "./bun";
