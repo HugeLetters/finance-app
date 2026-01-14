@@ -44,11 +44,20 @@ export namespace EffectBunTest {
 		[K in keyof TArbs]: ArbitraryType<TArbs[K]>;
 	};
 
+	/**
+	 * Effect-based test runner interface for Bun:test.
+	 * Provides methods to run Effect computations as tests with various configurations.
+	 */
 	export interface Tester<R> extends EffectBunTest.Test<R> {
+		/** Skip this test */
 		skip: EffectBunTest.Test<R>;
+		/** Skip test conditionally */
 		skipIf: (condition: boolean) => EffectBunTest.Test<R>;
+		/** Run test conditionally */
 		runIf: (condition: boolean) => EffectBunTest.Test<R>;
+		/** Run only this test */
 		only: EffectBunTest.Test<R>;
+		/** Run test for each case in array */
 		each: <T>(
 			cases: Arr.NonEmptyArray<T>,
 		) => <A, E>(
@@ -56,8 +65,10 @@ export namespace EffectBunTest {
 			self: TestFunction<A, E, R, Array<T>>,
 			timeout?: number | BunTest.TestOptions,
 		) => void;
+		/** Expect test to fail */
 		fails: EffectBunTest.Test<R>;
 
+		/** Property-based test with arbitrary data */
 		prop: <const TArbs extends Arbitraries, A, E>(
 			name: string,
 			arbitraries: TArbs,
@@ -71,11 +82,21 @@ export namespace EffectBunTest {
 	}
 
 	export interface MethodsNonLive<R = never> extends API {
+		/**
+		 * Run Effect-based tests with test services environment.
+		 * Provides automatic error handling and test context.
+		 */
 		readonly effect: EffectBunTest.Tester<TestServices.TestServices | R>;
+		/**
+		 * Retry a test multiple times to handle flaky behavior.
+		 */
 		readonly flakyTest: <A, E, R2>(
 			self: Effect.Effect<A, E, R2>,
 			timeout?: Duration.DurationInput,
 		) => Effect.Effect<A, never, R2>;
+		/**
+		 * Run Effect-based tests with scoped resources.
+		 */
 		readonly scoped: EffectBunTest.Tester<
 			TestServices.TestServices | Scope.Scope | R
 		>;
@@ -83,6 +104,7 @@ export namespace EffectBunTest {
 		 * Share a `Layer` between multiple tests, optionally wrapping
 		 * the tests in a `describe` block if a name is provided.
 		 *
+		 * @example
 		 * ```ts
 		 * import { Context, Effect, Layer } from "effect"
 		 *
@@ -140,8 +162,17 @@ export namespace EffectBunTest {
 		) => void;
 	}
 
+	/**
+	 * Full test methods interface including live test runners.
+	 */
 	export interface Methods<R = never> extends MethodsNonLive<R> {
+		/**
+		 * Run tests without test environment (integration tests).
+		 */
 		readonly live: EffectBunTest.Tester<R>;
+		/**
+		 * Run tests with scoped resources but no test environment.
+		 */
 		readonly scopedLive: EffectBunTest.Tester<Scope.Scope | R>;
 	}
 }
@@ -362,4 +393,32 @@ function makeMethods(test: BunTest.Test<[]>): EffectBunTest.Methods {
 	});
 }
 
+/**
+ * Main test harness for Effect-based testing with Bun:test.
+ * Provides various methods to run Effect computations as tests.
+ *
+ * @example
+ * ```ts
+ * import { test, expectEquivalence } from "~/test";
+ *
+ * test.effect("basic test", () =>
+ *   Effect.gen(function* () {
+ *     const result = yield* Effect.succeed(42);
+ *     expectEquivalence(result, 42);
+ *   })
+ * );
+ *
+ * test.scoped("scoped test", () =>
+ *   Effect.gen(function* () {
+ *     // Test with scoped resources
+ *   })
+ * );
+ *
+ * test.live("integration test", () =>
+ *   Effect.gen(function* () {
+ *     // Test without test environment
+ *   })
+ * );
+ * ```
+ */
 export const test = makeMethods(BunTest.test);

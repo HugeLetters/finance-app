@@ -6,6 +6,19 @@ import * as Fn from "effect/Function";
 import { UnknownDiffer } from "~/utils/differ";
 import { Stdout } from "~/utils/stdout";
 
+/**
+ * Asserts that an Effect fails. Flips the result so that success becomes failure and vice versa.
+ * Use this to test that Effects fail as expected.
+ *
+ * @example
+ * ```ts
+ * test.effect("should fail", () =>
+ *   Effect.gen(function* () {
+ *     return yield* Effect.fail("expected error");
+ *   }).pipe(expectFail)
+ * );
+ * ```
+ */
 export function expectFail<E, R>(self: Effect.Effect<unknown, E, R>) {
 	return self.pipe(Effect.map(unexpectedSuccess), Effect.flip);
 }
@@ -16,6 +29,20 @@ const unexpectedSuccess = Fn.flow(
 	(m) => fail(m),
 );
 
+/**
+ * Asserts that two values are equivalent using Effect's Equal typeclass.
+ * Provides detailed diff output when values don't match.
+ *
+ * @example
+ * ```ts
+ * test.effect("should equal", () =>
+ *   Effect.gen(function* () {
+ *     const result = yield* someEffect();
+ *     expectEquivalence(result, { expected: "value" });
+ *   })
+ * );
+ * ```
+ */
 export function expectEquivalence<T>(received: T, expected: T) {
 	const patch = UnknownDiffer.differ.diff(expected, received);
 	const diff = UnknownDiffer.Formatter.format(patch);

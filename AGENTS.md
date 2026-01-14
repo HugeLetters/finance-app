@@ -77,11 +77,13 @@ Family finance app for tracking spending, investments, and shared expenses with 
 - **OKLCH Best Practices**: OKLCH provides perceptually uniform colors; derive L and C from base for all shades using relative deltas/factors to ensure consistent contrast and accessibility. For lightness, use decreasing scales (50 lightest, 900 darkest); for chroma, use bell-curve scaling (low at extremes, high mid-range). Handle very light/dark bases by clamping L to [0,1] and scaling C proportionally to avoid gamut clipping. Research standard generators (e.g., sine waves for chroma) for advanced patterns, but keep derivation simple for maintainability.
 
 ## Testing
-- **Framework**: Playwright for end-to-end testing.
-- **Configuration**: `playwright.config.ts` sets baseURL to http://localhost:3000 and webServer to auto-start `bun run dev`.
-- **Test Structure**: Tests in `tests/` directory (e.g., `basic.spec.ts` checks home page elements).
-- **Running Tests**: Use package scripts for different modes. Ensure dev server is running or let config handle it.
-- **Best Practices**: Write tests to reflect actual site features; use relative URLs with baseURL; include checks for key UI elements.
+- **Unit Testing**: Always use Effect-based test harness in `src/test/index.ts` for testing Effect computations with Bun:test.
+- **E2E Testing**: Playwright for end-to-end testing.
+- **Test Structure**: Unit tests anywhere in `src/` with `*.test.ts` pattern, using harness from `src/test/index.ts`.
+- **E2E Test Structure**: Tests in `tests/` directory (e.g., `basic.spec.ts` checks home page elements).
+- **Running Unit Tests**: `bun test` (configured via bunfig.toml to include `src/**/*.test.ts`).
+- **Running E2E Tests**: `bun run e2e` (headless), `bun run e2e:ui` (interactive UI). Config in `playwright.config.ts` auto-starts dev server at http://localhost:3000.
+- **Best Practices**: Always use Effect-based tests; prefer `test.effect` for most tests; use `expectEquivalence` for assertions with detailed diffs; run lint and typecheck after adding tests.
 
 ## Future Tasks
 - **High Priority**: Research and choose live sync solution; implement authentication system; design database schema for spending, users, currencies.
