@@ -144,14 +144,12 @@ const CliConfig = {
 		}, "Cannot use no-max and max-iterations at the same time"),
 	),
 	model: Options.text("model").pipe(
+		Options.withAlias("m"),
 		Options.withDescription("Model to use"),
 		Options.withDefault("openai/gpt-5.2-codex"),
 	),
 	commandArgs: Args.repeated(Args.text({ name: "args" })).pipe(
 		Args.withDescription("Extra argument passed to opencode"),
-		Args.map((args) =>
-			Arr.isEmptyArray(args) ? ["-m", "openai/gpt-5.2-codex"] : args,
-		),
 	),
 };
 
@@ -159,16 +157,7 @@ const ralphLoopCommand = Cli.make(
 	"ralph-wiggum-loop",
 	CliConfig,
 	Effect.fnUntraced(function* (options) {
-		const summary = [
-			`maxIterations=${options.maxIterations ?? "unlimited"}`,
-			`completionPromise=${options.prompt.completionPromise}`,
-		];
-
-		if (options.commandArgs.length > 0) {
-			summary.push(`commandArgs=${options.commandArgs.join(" ")}`);
-		}
-
-		yield* Effect.log(`Starting Ralph loop (${summary.join(", ")})`);
+		yield* Effect.log("Starting Ralph loop").pipe(Effect.annotateLogs(options));
 		yield* runLoop(options);
 	}),
 ).pipe(
