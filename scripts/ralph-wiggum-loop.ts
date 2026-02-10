@@ -127,11 +127,8 @@ const parseArgs = Effect.fn("parseArgs")(function* (
 });
 
 const runIteration = Effect.fn("runIteration")(function* (config: RalphConfig) {
-	const command = Command.make(
-		"opencode",
-		"run",
-		...config.commandArgs,
-		config.prompt,
+	const command = Command.make("opencode", "run", ...config.commandArgs).pipe(
+		Command.feed(config.prompt),
 	);
 
 	const process = yield* Command.start(command);
