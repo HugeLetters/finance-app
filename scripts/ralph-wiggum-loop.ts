@@ -2,136 +2,31 @@
  * Runs a Ralph Wiggum loop for LLM CLIs.
  * Repeats the same prompt until a completion promise appears.
  */
-import { Command, FileSystem } from "@effect/platform";
+import { Command as Cli, Options, ValidationError } from "@effect/cli";
+import * as Args from "@effect/cli/Args";
+import * as HelpDoc from "@effect/cli/HelpDoc";
+import * as Shell from "@effect/platform/Command";
+import * as FileSystem from "@effect/platform/FileSystem";
 import { BunContext, BunRuntime } from "@effect/platform-bun";
 import { Logger } from "effect";
-import * as Data from "effect/Data";
+import * as Arr from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as Option from "effect/Option";
 import * as Stream from "effect/Stream";
+import * as Str from "effect/String";
 
-const DEFAULT_COMPLETION_PROMISE = "DONE";
-const DEFAULT_MAX_ITERATIONS = 20;
-const DEFAULT_COMMAND_ARGS = ["-m", "openai/gpt-5.2-codex"] as const;
-
-type RalphConfig = {
-	readonly prompt: string;
-	readonly completionPromise: string;
-	readonly maxIterations: number | null;
-	readonly commandArgs: ReadonlyArray<string>;
-};
-
-class RalphLoopError extends Data.TaggedError("RalphLoopError")<{
-	readonly message: string;
-}> {
-	static fail(message: string) {
-		return new RalphLoopError({ message });
-	}
-}
-
-const parseArgs = Effect.fn("parseArgs")(function* (
-	argv: ReadonlyArray<string>,
-) {
-	let prompt: string | null = null;
-	let completionPromise = DEFAULT_COMPLETION_PROMISE;
-	let maxIterations: number | null = DEFAULT_MAX_ITERATIONS;
-	const commandArgs: Array<string> = [...DEFAULT_COMMAND_ARGS];
-
-	function concatPrompt(value: string | null) {
-		if (prompt === null) {
-			return value;
-		}
-
-		if (value === null) {
-			return prompt;
-		}
-
-		return `${prompt}\n${value}`;
-	}
-
-	for (let index = 0; index < argv.length; index += 1) {
-		const arg = argv[index];
-		switch (arg) {
-			case "--prompt": {
-				prompt = concatPrompt(argv[index + 1] ?? null);
-				index += 1;
-				break;
-			}
-			case "--prompt-file": {
-				const promptFile = argv[index + 1] ?? null;
-				index += 1;
-
-				if (promptFile === null) {
-					return yield* RalphLoopError.fail("Promp file arg is empty");
-				}
-
-				const fs = yield* FileSystem.FileSystem;
-				const content = yield* fs.readFileString(promptFile);
-				prompt = concatPrompt(content);
-
-				break;
-			}
-			case "--completion-promise": {
-				completionPromise = argv[index + 1] ?? "";
-				index += 1;
-				break;
-			}
-			case "--max-iterations": {
-				const raw = argv[index + 1];
-				index += 1;
-				maxIterations = raw ? Number(raw) : Number.NaN;
-				break;
-			}
-			case "--command-arg": {
-				const value = argv[index + 1];
-				index += 1;
-				if (value) {
-					commandArgs.push(value);
-				}
-				break;
-			}
-			case "--no-max": {
-				maxIterations = null;
-				break;
-			}
-			default: {
-				break;
-			}
-		}
-	}
-
-	if (!completionPromise) {
-		return yield* RalphLoopError.fail("Completion promise cannot be empty.");
-	}
-
-	if (
-		maxIterations !== null &&
-		(!Number.isFinite(maxIterations) || maxIterations < 1)
-	) {
-		return yield* RalphLoopError.fail(
-			"Max iterations must be a positive number.",
-		);
-	}
-
-	if (!prompt) {
-		return yield* RalphLoopError.fail(
-			"Missing prompt. Provide --prompt or --prompt-file for the loop.",
-		);
-	}
-
-	return {
-		prompt: `${prompt}. If you think you have completed the task - reply with ${completionPromise}`,
-		completionPromise,
-		maxIterations,
-		commandArgs,
-	} satisfies RalphConfig;
-});
+type RalphConfig = Cli.Command.ParseConfig<typeof CliConfig>;
 
 const runIteration = Effect.fn("runIteration")(function* (config: RalphConfig) {
-	const command = Command.make("opencode", "run", ...config.commandArgs).pipe(
-		Command.feed(config.prompt),
-	);
+	const command = Shell.make(
+		"opencode",
+		"run",
+		"-m",
+		config.model,
+		...config.commandArgs,
+	).pipe(Shell.feed(config.prompt.prompt));
 
-	const process = yield* Command.start(command);
+	const process = yield* Shell.start(command);
 	const decoder = new TextDecoder("utf-8");
 
 	const outputStream = process.stdout.pipe(
@@ -154,14 +49,14 @@ const runIteration = Effect.fn("runIteration")(function* (config: RalphConfig) {
 			}
 		}),
 	);
-});
+}, Effect.scoped);
 
 const runLoop = Effect.fn("runLoop")(function* (config: RalphConfig) {
 	let iteration = 1;
 	while (config.maxIterations === null || iteration <= config.maxIterations) {
 		yield* Effect.log(`Ralph loop iteration ${iteration}...`);
 		const output = yield* runIteration(config);
-		if (output.includes(config.completionPromise)) {
+		if (output.includes(config.prompt.completionPromise)) {
 			yield* Effect.log("Completion promise detected. Loop finished.");
 			return;
 		}
@@ -173,25 +68,128 @@ const runLoop = Effect.fn("runLoop")(function* (config: RalphConfig) {
 	);
 });
 
-Effect.gen(function* () {
-	const argv = Bun.argv.slice(2);
-	const config = yield* parseArgs(argv);
-	const summary = [
-		`maxIterations=${config.maxIterations ?? "unlimited"}`,
-		`completionPromise=${config.completionPromise}`,
-	];
+const prompts = Options.text("prompt").pipe(
+	Options.withDescription("Prompt text to send to the CLI"),
+	Options.repeated,
+);
 
-	if (config.commandArgs.length > 0) {
-		summary.push(`commandArgs=${config.commandArgs.join(" ")}`);
-	}
-
-	yield* Effect.log(`Starting Ralph loop (${summary.join(", ")})`);
-	yield* runLoop(config);
-}).pipe(
-	Effect.catchAll((error) =>
-		Effect.logFatal(error instanceof Error ? error.message : String(error)),
+const filePrompts = Options.text("prompt-file").pipe(
+	Options.withDescription("File path to read additional prompt text"),
+	Options.repeated,
+	Options.mapEffect(
+		Effect.fnUntraced(function* (files) {
+			const fs = yield* FileSystem.FileSystem;
+			return yield* Effect.all(
+				files.map((filePath) => fs.readFileString(filePath)),
+			).pipe(
+				Effect.mapError((e) =>
+					ValidationError.invalidValue(HelpDoc.p(e.message)),
+				),
+			);
+		}),
 	),
+);
+
+const promptInput = Options.all({ prompts, filePrompts }).pipe(
+	Options.map(({ prompts, filePrompts }) => [...prompts, ...filePrompts]),
+	Options.filterMap(
+		Option.liftPredicate(Arr.isNonEmptyReadonlyArray),
+		"Missing prompt",
+	),
+	Options.map(Arr.join("\n")),
+);
+
+const completionPromise = Options.text("completion-promise").pipe(
+	Options.withDescription("Token that ends the loop when seen in output"),
+	Options.withDefault("DONE"),
+	Options.filterMap(
+		Option.liftPredicate(Str.isNonEmpty),
+		"completion-promise cannot be empty",
+	),
+);
+
+const maxIterations = Options.integer("max-iterations").pipe(
+	Options.withDescription("Maximum iterations before stopping"),
+	Options.filterMap(
+		Option.liftPredicate((iterations) => iterations > 0),
+		"Max iterations must be a positive integer.",
+	),
+	Options.withDefault(null),
+);
+
+const noMax = Options.boolean("no-max").pipe(
+	Options.withDescription("Run without an iteration limit"),
+);
+
+const CliConfig = {
+	prompt: Options.all({ promptInput, completionPromise }).pipe(
+		Options.map(({ promptInput, completionPromise }) => {
+			return {
+				prompt: `${promptInput}\nIf you think you have completed the task - reply with ${completionPromise}`,
+				completionPromise,
+			};
+		}),
+	),
+	maxIterations: Options.all({ maxIterations, noMax }).pipe(
+		Options.filterMap(({ maxIterations, noMax }) => {
+			if (noMax) {
+				if (maxIterations !== null) {
+					return Option.none();
+				}
+
+				return Option.some(null);
+			}
+
+			return Option.some(maxIterations ?? 20);
+		}, "Cannot use no-max and max-iterations at the same time"),
+	),
+	model: Options.text("model").pipe(
+		Options.withDescription("Model to use"),
+		Options.withDefault("openai/gpt-5.2-codex"),
+	),
+	commandArgs: Args.repeated(Args.text({ name: "args" })).pipe(
+		Args.withDescription("Extra argument passed to opencode"),
+		Args.map((args) =>
+			Arr.isEmptyArray(args) ? ["-m", "openai/gpt-5.2-codex"] : args,
+		),
+	),
+};
+
+const ralphLoopCommand = Cli.make(
+	"ralph-wiggum-loop",
+	CliConfig,
+	Effect.fnUntraced(function* (options) {
+		const summary = [
+			`maxIterations=${options.maxIterations ?? "unlimited"}`,
+			`completionPromise=${options.prompt.completionPromise}`,
+		];
+
+		if (options.commandArgs.length > 0) {
+			summary.push(`commandArgs=${options.commandArgs.join(" ")}`);
+		}
+
+		yield* Effect.log(`Starting Ralph loop (${summary.join(", ")})`);
+		yield* runLoop(options);
+	}),
+).pipe(
+	Cli.withDescription(
+		"Repeats a prompt until a completion promise appears in output.",
+	),
+);
+
+const cli = Cli.run(ralphLoopCommand, {
+	name: "Ralph Wiggum Loop",
+	version: "0.1.0",
+});
+
+cli(Bun.argv).pipe(
+	Effect.catchAll((error) => {
+		if (ValidationError.isValidationError(error)) {
+			return Effect.void;
+		}
+
+		return Effect.logFatal(error);
+	}),
 	Effect.provide([Logger.pretty, BunContext.layer]),
-	Effect.scoped,
 	BunRuntime.runMain,
 );
