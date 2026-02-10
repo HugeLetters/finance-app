@@ -140,13 +140,7 @@ const runIteration = Effect.fn("runIteration")(function* (config: RalphConfig) {
 
 	yield* process.stderr.pipe(
 		Stream.map((chunk) => decoder.decode(chunk, { stream: true })),
-		Stream.runForEach((text) => Effect.logError(text)),
-		Effect.andThen(() => {
-			const flush = decoder.decode();
-			if (flush) {
-				return Effect.log(flush);
-			}
-		}),
+		Stream.runForEach((text) => Effect.logInfo(text)),
 		Effect.forkScoped,
 	);
 
