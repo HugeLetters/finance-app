@@ -22,28 +22,52 @@ type RalphConfig = {
 
 class RalphLoopError extends Data.TaggedError("RalphLoopError")<{
 	readonly message: string;
-}> {}
+}> {
+	static fail(message: string) {
+		return new RalphLoopError({ message });
+	}
+}
 
 const parseArgs = Effect.fn("parseArgs")(function* (
 	argv: ReadonlyArray<string>,
 ) {
 	let prompt: string | null = null;
-	let promptFile: string | null = null;
 	let completionPromise = DEFAULT_COMPLETION_PROMISE;
 	let maxIterations: number | null = DEFAULT_MAX_ITERATIONS;
 	const commandArgs: Array<string> = [...DEFAULT_COMMAND_ARGS];
+
+	function concatPrompt(value: string | null) {
+		if (prompt === null) {
+			return value;
+		}
+
+		if (value === null) {
+			return prompt;
+		}
+
+		return `${prompt}\n${value}`;
+	}
 
 	for (let index = 0; index < argv.length; index += 1) {
 		const arg = argv[index];
 		switch (arg) {
 			case "--prompt": {
-				prompt = argv[index + 1] ?? null;
+				prompt = concatPrompt(argv[index + 1] ?? null);
 				index += 1;
 				break;
 			}
 			case "--prompt-file": {
-				promptFile = argv[index + 1] ?? null;
+				const promptFile = argv[index + 1] ?? null;
 				index += 1;
+
+				if (promptFile === null) {
+					return yield* RalphLoopError.fail("Promp file arg is empty");
+				}
+
+				const fs = yield* FileSystem.FileSystem;
+				const content = yield* fs.readFileString(promptFile);
+				prompt = concatPrompt(content);
+
 				break;
 			}
 			case "--completion-promise": {
@@ -76,30 +100,22 @@ const parseArgs = Effect.fn("parseArgs")(function* (
 	}
 
 	if (!completionPromise) {
-		return yield* new RalphLoopError({
-			message: "Completion promise cannot be empty.",
-		});
+		return yield* RalphLoopError.fail("Completion promise cannot be empty.");
 	}
 
 	if (
 		maxIterations !== null &&
 		(!Number.isFinite(maxIterations) || maxIterations < 1)
 	) {
-		return yield* new RalphLoopError({
-			message: "Max iterations must be a positive number.",
-		});
-	}
-
-	const fs = yield* FileSystem.FileSystem;
-	if (!prompt && promptFile) {
-		prompt = yield* fs.readFileString(promptFile);
+		return yield* RalphLoopError.fail(
+			"Max iterations must be a positive number.",
+		);
 	}
 
 	if (!prompt) {
-		return yield* new RalphLoopError({
-			message:
-				"Missing prompt. Provide --prompt or --prompt-file for the loop.",
-		});
+		return yield* RalphLoopError.fail(
+			"Missing prompt. Provide --prompt or --prompt-file for the loop.",
+		);
 	}
 
 	return {
