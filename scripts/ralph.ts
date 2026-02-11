@@ -19,6 +19,7 @@ type RalphConfig = Cli.Command.ParseConfig<typeof CliConfig>;
 
 export enum Models {
 	Gpt5_2_Codex = "openai/gpt-5.2-codex",
+	KimiK2_5 = "opencode/kimi-k2.5-free",
 }
 
 const runIteration = Effect.fn("runIteration")(function* (config: RalphConfig) {
@@ -160,7 +161,7 @@ const CliConfig = {
 	model: Options.choice("model", Object.values(Models)).pipe(
 		Options.withAlias("m"),
 		Options.withDescription("Model to use"),
-		Options.withDefault(Models.Gpt5_2_Codex),
+		Options.withDefault(Models.KimiK2_5),
 	),
 	commandArgs: Args.repeated(Args.text({ name: "args" })).pipe(
 		Args.withDescription("Extra argument passed to opencode"),
