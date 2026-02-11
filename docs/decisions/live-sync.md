@@ -8,7 +8,6 @@ We need real-time client synchronization for a two-user family finance app. The 
 
 ## Options Considered
 - Zero: production-oriented client/server sync, requires query/mutator endpoints, auth via cookies/tokens, expects Postgres.
-- Jazz: CRDT-first database with built-in auth, sharing, and cloud sync.
 - Livestore: event-sourced, local-first data layer with pluggable sync providers and Solid integration.
 
 
@@ -22,7 +21,7 @@ Run an initial spike with Zero as the first candidate. If the Zero spike shows u
 
 ## Consequences
 - We will likely need a Postgres-backed environment for the spike.
-- If Zero proves heavy, we reassess toward a local-first approach (Livestore or Jazz).
+- If Zero proves heavy, we reassess toward a local-first approach (Livestore).
 
 ## Next Steps
 - Build a minimal workspace + spending table sync spike with Zero.

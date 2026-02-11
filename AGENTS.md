@@ -37,7 +37,7 @@ Family finance app for tracking spending, investments, and shared expenses with 
 - **Full-Stack Framework**: Solid Start - https://docs.solidjs.com/solid-start/getting-started (initialized with src/routes/, entry files, app.tsx)
 - **Linter/Formatter**: Biome - https://biomejs.dev/ (recommended rules; lint warnings: non-null assertions, button types)
 - **Testing**: Playwright - https://playwright.dev/ (e2e with auto-start dev server via playwright.config.ts)
-- **Live Sync Options** (research needed): Zero (https://zero.rocicorp.dev/docs/introduction), Jazz (https://jazz.tools/docs/react), Livestore (https://livestore.dev/). Differ module provides foundational patch computation for efficient sync.
+- **Live Sync Options** (research needed).
 - Absolutely do not want to use a cloud provider - everything is self-hosted
 
 ## Core Modules
