@@ -91,8 +91,3 @@ Family finance app for tracking spending, investments, and shared expenses with 
 - **Running Unit Tests**: `bun test` (configured via bunfig.toml to include `src/**/*.test.ts`).
 - **Running E2E Tests**: `bun run e2e` (headless), `bun run e2e:ui` (interactive UI). Config in `playwright.config.ts` auto-starts dev server at http://localhost:3000.
 - **Best Practices**: Always use Effect-based tests; prefer `test.effect` for most tests; use `expectEquivalence` for assertions with detailed diffs; run lint and typecheck after adding tests.
-
-## Future Tasks
-- **High Priority**: Research and choose live sync solution; implement authentication system; design database schema for spending, users, currencies.
-- **Medium Priority**: Build spending table component; add mini-apps functionality.
-- **Low Priority**: Implement command palette; add keyboard navigation; integrate color palette theming into UI components.
