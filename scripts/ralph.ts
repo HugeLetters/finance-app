@@ -18,13 +18,21 @@ import * as Str from "effect/String";
 type RalphConfig = Cli.Command.ParseConfig<typeof CliConfig>;
 
 const runIteration = Effect.fn("runIteration")(function* (config: RalphConfig) {
+    const fs = yield* FileSystem.FileSystem;
+    const ralphPrompt = yield* fs.readFileString("scripts/ralph.md");
+	const prompt =
+		`${config.fullPrompt}\n` +
+		`${ralphPrompt}\n` +
+		`After completing each task, append to ${config.progressFile}\n` +
+		`If, while implementing the feature, you notice that all work is complete, output ${config.completionPromise}`;
+
 	const command = Shell.make(
 		"opencode",
 		"run",
 		"-m",
 		config.model,
 		...config.commandArgs,
-	).pipe(Shell.feed(config.prompt.prompt));
+	).pipe(Shell.feed(prompt));
 
 	const process = yield* Shell.start(command);
 	const decoder = new TextDecoder("utf-8");
@@ -56,7 +64,7 @@ const runLoop = Effect.fn("runLoop")(function* (config: RalphConfig) {
 	while (config.maxIterations === null || iteration <= config.maxIterations) {
 		yield* Effect.log(`Ralph loop iteration ${iteration}...`);
 		const output = yield* runIteration(config);
-		if (output.includes(config.prompt.completionPromise)) {
+		if (output.includes(config.completionPromise)) {
 			yield* Effect.log("Completion promise detected. Loop finished.");
 			return;
 		}
@@ -90,7 +98,7 @@ const filePrompts = Options.text("prompt-file").pipe(
 	),
 );
 
-const promptInput = Options.all({ prompts, filePrompts }).pipe(
+const fullPrompt = Options.all({ prompts, filePrompts }).pipe(
 	Options.map(({ prompts, filePrompts }) => [...prompts, ...filePrompts]),
 	Options.filterMap(
 		Option.liftPredicate(Arr.isNonEmptyReadonlyArray),
@@ -106,6 +114,14 @@ const completionPromise = Options.text("completion-promise").pipe(
 		Option.liftPredicate(Str.isNonEmpty),
 		"completion-promise cannot be empty",
 	),
+	Options.map((promise) => `<promise>${promise}</promise>`),
+);
+
+const progressFile = Options.text("progress-file").pipe(
+	Options.withDescription(
+		"File path to append streamed output for progress tracking",
+	),
+	Options.withDefault("progress.txt"),
 );
 
 const maxIterations = Options.integer("max-iterations").pipe(
@@ -122,14 +138,9 @@ const noMax = Options.boolean("no-max").pipe(
 );
 
 const CliConfig = {
-	prompt: Options.all({ promptInput, completionPromise }).pipe(
-		Options.map(({ promptInput, completionPromise }) => {
-			return {
-				prompt: `${promptInput}\nIf you think you have completed the task - reply with ${completionPromise}`,
-				completionPromise,
-			};
-		}),
-	),
+	fullPrompt,
+	completionPromise,
+	progressFile,
 	maxIterations: Options.all({ maxIterations, noMax }).pipe(
 		Options.filterMap(({ maxIterations, noMax }) => {
 			if (noMax) {
@@ -140,7 +151,7 @@ const CliConfig = {
 				return Option.some(null);
 			}
 
-			return Option.some(maxIterations ?? 20);
+			return Option.some(maxIterations ?? 10);
 		}, "Cannot use no-max and max-iterations at the same time"),
 	),
 	model: Options.text("model").pipe(
