@@ -17,12 +17,13 @@ import * as Str from "effect/String";
 
 type RalphConfig = Cli.Command.ParseConfig<typeof CliConfig>;
 
+export enum Models {
+	Gpt5_2_Codex = "openai/gpt-5.2-codex",
+}
+
 const runIteration = Effect.fn("runIteration")(function* (config: RalphConfig) {
-    const fs = yield* FileSystem.FileSystem;
-    const ralphPrompt = yield* fs.readFileString("scripts/ralph.md");
 	const prompt =
 		`${config.fullPrompt}\n` +
-		`${ralphPrompt}\n` +
 		`After completing each task, append to ${config.progressFile}\n` +
 		`If, while implementing the feature, you notice that all work is complete, output ${config.completionPromise}`;
 
@@ -59,7 +60,9 @@ const runIteration = Effect.fn("runIteration")(function* (config: RalphConfig) {
 	);
 }, Effect.scoped);
 
-const runLoop = Effect.fn("runLoop")(function* (config: RalphConfig) {
+export const runRalphLoop = Effect.fn("runRalphLoop")(function* (
+	config: RalphConfig,
+) {
 	let iteration = 1;
 	while (config.maxIterations === null || iteration <= config.maxIterations) {
 		yield* Effect.log(`Ralph loop iteration ${iteration}...`);
@@ -154,10 +157,10 @@ const CliConfig = {
 			return Option.some(maxIterations ?? 10);
 		}, "Cannot use no-max and max-iterations at the same time"),
 	),
-	model: Options.text("model").pipe(
+	model: Options.choice("model", Object.values(Models)).pipe(
 		Options.withAlias("m"),
 		Options.withDescription("Model to use"),
-		Options.withDefault("openai/gpt-5.2-codex"),
+		Options.withDefault(Models.Gpt5_2_Codex),
 	),
 	commandArgs: Args.repeated(Args.text({ name: "args" })).pipe(
 		Args.withDescription("Extra argument passed to opencode"),
@@ -169,7 +172,7 @@ const ralphLoopCommand = Cli.make(
 	CliConfig,
 	Effect.fnUntraced(function* (options) {
 		yield* Effect.log("Starting Ralph loop").pipe(Effect.annotateLogs(options));
-		yield* runLoop(options);
+		yield* runRalphLoop(options);
 	}),
 ).pipe(
 	Cli.withDescription(

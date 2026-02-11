@@ -26,3 +26,7 @@ When choosing the next task, prioritize in this order:
 4. Standard features and implementation
 5. Polish, cleanup, and quick wins
 Fail fast on risky work. Save easy wins for later.
+
+
+# Where to find tasks
+Tasks are located in `./docs/prd/**/*.md`
