@@ -44,7 +44,7 @@ Family finance app for tracking spending, investments, and shared expenses with 
 
 ## Development Environment
 - **Code Quality**: Biome handles linting and formatting with recommended rules enabled. Run `bun run lint` to check for issues, `bun run lint:fix` to auto-apply fixes, and `bun run format` to format code. Always run linting after code changes to ensure consistency.
-- **Type Checking**: Use `npx tsc --noEmit` for comprehensive TypeScript type checking. The project uses strict mode with Effect language service integration for better developer experience.
+- **Type Checking**: Use `bun run typecheck` for comprehensive TypeScript type checking. The project uses strict mode with Effect language service integration for better developer experience.
 - **VSCode Integration**: Project includes `.vscode/settings.json` configured for Biome (format on save, default formatter for JS/TS/JSON/CSS files, code actions for imports and fixes). The Biome and Effect language service extensions are recommended in `.vscode/extensions.json`.
 - **Git**: Repository initialized for version control. Commit changes after verifying tests pass.
 - **Testing**: Playwright tests are in `tests/` directory. Scripts added: `bun run e2e` (headless), `bun run e2e:ui` (interactive UI). Config in `playwright.config.ts` auto-starts dev server at http://localhost:3000. Run tests after starting dev server or use config for automatic server management.
