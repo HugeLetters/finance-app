@@ -18,6 +18,7 @@ Enable real-time synchronization across clients with conflict-aware updates. Use
 ## Functional Requirements
 - Evaluate Zero, Jazz, and Livestore against app needs - especially auth. 
 - Docs: Zero (https://zero.rocicorp.dev/docs/introduction), Jazz (https://jazz.tools/docs/react), Livestore (https://livestore.dev/). 
+- Reference: Zero (https://github.com/rocicorp/hello-zero-solid), Livestore (https://docs.livestore.dev/reference/framework-integrations/solid-integration/ and https://github.com/livestorejs/livestore/tree/main/examples/standalone/web-todomvc-solid)
 - Integrate selected provider with Effect module.
 - Broadcast patches and apply remotely.
 - Presence indicator optional for active users.
