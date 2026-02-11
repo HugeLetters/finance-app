@@ -38,6 +38,7 @@ Family finance app for tracking spending, investments, and shared expenses with 
 - **Linter/Formatter**: Biome - https://biomejs.dev/ (recommended rules; lint warnings: non-null assertions, button types)
 - **Testing**: Playwright - https://playwright.dev/ (e2e with auto-start dev server via playwright.config.ts)
 - **Live Sync Options** (research needed): Zero (https://zero.rocicorp.dev/docs/introduction), Jazz (https://jazz.tools/docs/react), Livestore (https://livestore.dev/). Differ module provides foundational patch computation for efficient sync.
+- Absolutely do not want to use a cloud provider - everything is self-hosted
 
 ## Core Modules
 - **Differ Module** (`src/utils/differ/index.ts`): Provides type-safe differencers for computing and applying patches to data structures (strings, objects, arrays, maps, sets). Uses Effect's Differ API with tagged unions for patches and Match for exhaustive pattern matching. Supports live sync by enabling efficient change tracking and application. Includes Formatter namespace for visualizing patches as tree structures for debugging.

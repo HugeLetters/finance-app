@@ -4,12 +4,13 @@ Status: proposed
 Date: 2026-02-10
 
 ## Context
-We need real-time client synchronization for a two-user family finance app. The sync layer should be reliable, support conflict resolution, and integrate cleanly with Solid Start + Bun. We also want a path to offline-first behavior, but initial release can prioritize correctness and simplicity.
+We need real-time client synchronization for a two-user family finance app. The sync layer should be reliable, support conflict resolution, and integrate cleanly with Solid Start + Bun. We also want a path to offline-first behavior, but initial release can prioritize correctness and simplicity. 
 
 ## Options Considered
-- Zero: production-oriented client/server sync, clear docs, expects Postgres backend.
-- Jazz: CRDT-focused local-first approach, early ecosystem, flexible but more custom logic.
-- Livestore: local-first sync layer, TypeScript-first, still evolving, unclear Bun/Solid Start fit.
+- Zero: production-oriented client/server sync, requires query/mutator endpoints, auth via cookies/tokens, expects Postgres.
+- Jazz: CRDT-first database with built-in auth, sharing, and cloud sync.
+- Livestore: event-sourced, local-first data layer with pluggable sync providers and Solid integration.
+
 
 ## Decision
 Run an initial spike with Zero as the first candidate. If the Zero spike shows unacceptable backend complexity or integration friction with Solid Start/Bun, pivot to a Livestore spike as the fallback.
