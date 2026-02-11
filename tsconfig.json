@@ -28,7 +28,8 @@
 					"effect",
 					"@effect/platform",
 					"@effect/platform-bun",
-					"@effect/platform-node"
+					"@effect/platform-node",
+					"@effect/cli"
 				],
 				"importAliases": {
 					"Array": "Arr",
