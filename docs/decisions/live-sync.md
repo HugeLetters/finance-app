@@ -8,11 +8,9 @@ We need real-time client synchronization for a two-user family finance app. The 
 
 ## Options Considered
 - Zero: production-oriented client/server sync, requires query/mutator endpoints, auth via cookies/tokens, expects Postgres.
-- Livestore: event-sourced, local-first data layer with pluggable sync providers and Solid integration.
-
 
 ## Decision
-Run an initial spike with Zero as the first candidate. If the Zero spike shows unacceptable backend complexity or integration friction with Solid Start/Bun, pivot to a Livestore spike as the fallback.
+Run an initial spike with Zero as the first candidate. If the Zero spike shows unacceptable backend complexity or integration friction with Solid Start/Bu.
 
 ## Rationale
 - Zero looks most mature for a small-team, real-time CRUD app.
@@ -21,7 +19,6 @@ Run an initial spike with Zero as the first candidate. If the Zero spike shows u
 
 ## Consequences
 - We will likely need a Postgres-backed environment for the spike.
-- If Zero proves heavy, we reassess toward a local-first approach (Livestore).
 
 ## Next Steps
 - Build a minimal workspace + spending table sync spike with Zero.

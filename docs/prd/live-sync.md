@@ -16,9 +16,9 @@ Enable real-time synchronization across clients with conflict-aware updates. Use
 - As a user, conflicting edits do not corrupt data.
 
 ## Functional Requirements
-- Evaluate Zero and Livestore against app needs - especially auth. 
-- Docs: Zero (https://zero.rocicorp.dev/docs/introduction), Livestore (https://livestore.dev/). 
-- Reference: Zero (https://github.com/rocicorp/hello-zero-solid), Livestore (https://docs.livestore.dev/reference/framework-integrations/solid-integration/ and https://github.com/livestorejs/livestore/tree/main/examples/standalone/web-todomvc-solid)
+- Evaluate Zero against app needs - especially auth. 
+- Docs: Zero (https://zero.rocicorp.dev/docs/introduction). 
+- Reference: Zero (https://github.com/rocicorp/hello-zero-solid)
 - Integrate selected provider with Effect module.
 - Broadcast patches and apply remotely.
 - Presence indicator optional for active users.
