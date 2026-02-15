@@ -31,3 +31,6 @@ Thumbs.db
 
 # Reference libraries
 reference/library
+
+# Zero cache local sqlite artifacts
+zero.db*

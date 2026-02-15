@@ -20,6 +20,35 @@ Start the development server:
 bun run dev
 ```
 
+### Realtime Sync Demo (Zero)
+
+The repo includes a realtime todo demo at `/demo/todo` backed by Zero + Postgres.
+The browser gets Zero cache URL from the server session endpoint using `ZERO_CACHE_URL`.
+
+1. Create environment file:
+
+```bash
+cp .env.example .env
+```
+
+2. Start Postgres:
+
+```bash
+bun run db:up
+```
+
+3. Start app server and zero-cache in separate terminals:
+
+```bash
+# terminal A
+bun run dev
+
+# terminal B
+bun run zero:dev
+```
+
+Open `http://localhost:3000/demo/todo` in two browsers to validate realtime sync and optimistic mutations.
+
 ## Testing
 
 ### Unit Tests
@@ -42,6 +71,12 @@ bun run e2e
 
 # Interactive UI
 bun run e2e:ui
+```
+
+Run realtime sync E2E only when Zero services are running:
+
+```bash
+E2E_ZERO=1 bun run e2e tests/todo-sync.spec.ts
 ```
 
 ## Building
