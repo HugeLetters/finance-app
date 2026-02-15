@@ -15,6 +15,9 @@ export function Nav() {
 				<li class={`border-b-2 ${active("/about")} mx-1.5 sm:mx-6`}>
 					<a href="/about">About</a>
 				</li>
+				<li class={`border-b-2 ${active("/demo/todo")} mx-1.5 sm:mx-6`}>
+					<a href="/demo/todo">Todo Sync Demo</a>
+				</li>
 			</ul>
 		</nav>
 	);
